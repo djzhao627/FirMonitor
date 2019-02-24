@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="center_vertical"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -10,15 +11,16 @@
 
         <ImageView
             android:id="@+id/list_item_new"
-            android:visibility="gone"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="15dp"
-            android:src="@drawable/new_update" />
+            android:src="@drawable/new_update"
+            android:visibility="gone" />
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/list_item_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -34,7 +36,7 @@
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="4"
                 android:orientation="vertical"
                 android:padding="4dp">
@@ -61,6 +63,13 @@
                         android:textColor="@color/dark"
                         android:textSize="18sp" />
 
+                    <TextView
+                        android:id="@+id/list_item_short"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="ab3t" />
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -77,7 +86,7 @@
                     <TextView
                         android:id="@+id/list_item_version"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:gravity="left"
                         android:text="2.0.0.0215 (Build 200000) - 34.88 MB" />
 
@@ -90,23 +99,34 @@
 
                     <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:text="最近更新："
                         android:textColor="@color/dark" />
 
                     <TextView
                         android:id="@+id/list_item_time"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:gravity="left"
                         android:text="2019-02-15 08:42" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
+        <ImageView
+            android:id="@+id/list_item_delete_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@id/list_item_layout"
+            android:layout_alignBottom="@id/list_item_layout"
+            android:layout_marginEnd="5dp"
+            android:padding="5dp"
+            android:src="@drawable/del_btn" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
+            android:layout_alignBottom="@id/list_item_layout"
             android:background="@color/lightGrey" />
     </RelativeLayout>
 </LinearLayout>

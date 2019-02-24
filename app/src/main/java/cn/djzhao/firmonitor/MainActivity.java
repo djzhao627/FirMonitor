@@ -17,6 +17,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import org.litepal.crud.DataSupport;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -179,9 +181,17 @@ public class MainActivity extends BaseActivity
      *
      * @param value 需要解析的字符串
      */
-    private void saveApp(String value) {
+    private boolean saveApp(String value) {
+
+        String short_url = getValue("short", value);
+        AppListItem first = DataSupport.where("short_url = ?", short_url).findFirst(AppListItem.class);
+        if (first != null) {
+            Snackbar.make(fab, "请勿重复添加", Snackbar.LENGTH_SHORT).show();
+            return false;
+        }
+
         AppListItem item = new AppListItem();
-        item.setShort_url(getValue("short", value));
+        item.setShort_url(short_url);
         item.setAppIconUrl(getValue("icon_url", value));
         item.setAppName(getValue("name", value));
         item.setAppVersion(getValue("version", value));
@@ -190,7 +200,7 @@ public class MainActivity extends BaseActivity
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm"); // 2019-02-20 23:34
         Date date = new Date(time);
         item.setUpdateTime(sdf.format(date));
-        item.save();
+        return item.save();
     }
 
     private void addNewApp() {
@@ -220,9 +230,10 @@ public class MainActivity extends BaseActivity
                         if (string.indexOf("errors") != -1) {
                             Snackbar.make(fab, "不存在此APP", Snackbar.LENGTH_SHORT).show();
                         } else {
-                            saveApp(string);
+                            if (saveApp(string)) {
+                                addItemDialog.dismiss();
+                            }
                         }
-
                         closeProgressDialog();
                     }
                 });

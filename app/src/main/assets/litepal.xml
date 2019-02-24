@@ -1,0 +1,8 @@
+<litepal>
+    <dbname value="fir_monitor" />
+    <version value="1" />
+
+    <list>
+        <mapping class="cn.djzhao.firmonitor.db.AppListItem" />
+    </list>
+</litepal>
