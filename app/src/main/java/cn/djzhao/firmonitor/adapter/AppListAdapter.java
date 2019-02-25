@@ -25,7 +25,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
 
     private Context mContext;
     private List<AppListItem> items;
-    private int selected;
+    private static int selected;
 
     private OnAppListItemClickListener itemClickListener = null;
     private OnAppListItemDelClickListener delClickListener = null;
@@ -50,7 +50,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         void onDelClick(View view, int positon);
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         LinearLayout layout;
         ImageView appIcon;
@@ -60,6 +60,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         TextView appVersion;
         ImageView platform;
         ImageView delBtn;
+        ImageView newIcon;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -72,8 +73,14 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             appVersion = itemView.findViewById(R.id.list_item_version);
             platform = itemView.findViewById(R.id.list_item_platform_icon);
             delBtn = itemView.findViewById(R.id.list_item_delete_btn);
+            newIcon = itemView.findViewById(R.id.list_item_new);
+
         }
 
+        @Override
+        public void onClick(View v) {
+            selected = getAdapterPosition();
+        }
     }
 
     @NonNull
@@ -90,7 +97,6 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
-        selected = position;
         AppListItem item = items.get(position);
 
         String platformStr = item.getPlatform();
@@ -104,6 +110,9 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         holder.appName.setText(item.getAppName());
         holder.appVersion.setText(item.getAppVersion());
         holder.updateTime.setText(item.getUpdateTime());
+        if (item.isNew()) {
+            holder.newIcon.setImageResource(R.drawable.new_update);
+        }
 
         holder.layout.setOnClickListener(this);
         holder.delBtn.setOnClickListener(this);

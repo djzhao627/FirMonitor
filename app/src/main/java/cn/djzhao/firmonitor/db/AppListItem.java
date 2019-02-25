@@ -12,6 +12,7 @@ public class AppListItem extends DataSupport {
     private String updateTime;
     private String appVersion;
     private String platform;
+    private boolean isNew;
 
     public String getShort_url() {
         return short_url;
@@ -59,5 +60,13 @@ public class AppListItem extends DataSupport {
 
     public void setPlatform(String platform) {
         this.platform = platform;
+    }
+
+    public boolean isNew() {
+        return isNew;
+    }
+
+    public void setNew(boolean aNew) {
+        isNew = aNew;
     }
 }

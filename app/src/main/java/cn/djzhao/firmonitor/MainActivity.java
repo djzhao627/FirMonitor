@@ -1,6 +1,8 @@
 package cn.djzhao.firmonitor;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -10,6 +12,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -22,7 +25,9 @@ import org.litepal.crud.DataSupport;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
+import cn.djzhao.firmonitor.adapter.AppListAdapter;
 import cn.djzhao.firmonitor.db.AppListItem;
 import cn.djzhao.firmonitor.dialog.AddItemDialog;
 import cn.djzhao.firmonitor.util.HttpUtil;
@@ -35,11 +40,13 @@ public class MainActivity extends BaseActivity
 
     private SwipeRefreshLayout swipeRefresh;
     private TextView emptyTxt;
-    private RecyclerView itemList;
+    private RecyclerView recyclerView;
 
     private Context mContext = this;
     private FloatingActionButton fab;
     private DrawerLayout drawer;
+
+    private boolean isFinished = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,10 +69,86 @@ public class MainActivity extends BaseActivity
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        swipeRefresh.setRefreshing(true);
+        getDataFromFirim();
+    }
+
+    private void getDataFromFirim() {
+        final List<AppListItem> appListItems = DataSupport.findAll(AppListItem.class);
+        String baseUrl = "https://download.fir.im/";
+        int i = 0;
+        for (final AppListItem item : appListItems) {
+            if (++i == appListItems.size()) {
+                isFinished = true;
+            }
+            HttpUtil.sendOkHttpRequest(baseUrl + item.getShort_url(), new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Snackbar.make(fab, item.getAppName() + " 暂时无法读取新数据", Snackbar.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    String body = response.body().string();
+                    if (body.indexOf("errors") != -1) {
+                        Snackbar.make(fab, item.getAppName() + " 不存在", Snackbar.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Long time = Long.valueOf(getValue("created_at", body) + "000");
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm"); // 2019-02-20 23:34
+                    Date date = new Date(time);
+                    String newDate = sdf.format(date);
+                    if (!newDate.equals(item.getUpdateTime())) {
+                        item.setUpdateTime(newDate);
+                        item.setNew(true);
+                    }
+                    if (isFinished) {
+                        final AppListAdapter adapter = new AppListAdapter(appListItems, new AppListAdapter.OnAppListItemClickListener() {
+                            @Override
+                            public void onItemClick(View view, int positon) {
+                                AppListItem item1 = appListItems.get(positon);
+                                Uri uri = Uri.parse("https://fir.im/" + item1.getShort_url());
+                                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                startActivity(intent);
+                            }
+                        }, new AppListAdapter.OnAppListItemDelClickListener() {
+                            @Override
+                            public void onDelClick(View view, int positon) {
+                                appListItems.get(positon).delete();
+                                appListItems.remove(positon);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        swipeRefresh.setRefreshing(true);
+                                        getDataFromFirim();
+                                    }
+                                });
+                            }
+                        });
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                emptyTxt.setVisibility(View.GONE);
+                                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext);
+                                recyclerView.setLayoutManager(linearLayoutManager);
+                                recyclerView.setAdapter(adapter);
+                                adapter.notifyDataSetChanged();
+                                swipeRefresh.setRefreshing(false);
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
     protected void findViewById() {
         swipeRefresh = findViewById(R.id.content_swipe_refresh);
         emptyTxt = findViewById(R.id.content_empty_txt);
-        itemList = findViewById(R.id.content_recycler_view);
+        recyclerView = findViewById(R.id.content_recycler_view);
         fab = findViewById(R.id.fab);
         drawer = findViewById(R.id.drawer_layout);
     }
@@ -81,9 +164,8 @@ public class MainActivity extends BaseActivity
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
+                        getDataFromFirim();
                         swipeRefresh.setRefreshing(false);
-                        Snackbar.make(swipeRefresh, "Replace with your own action", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
                     }
                 }, 2000);
             }
@@ -232,6 +314,13 @@ public class MainActivity extends BaseActivity
                         } else {
                             if (saveApp(string)) {
                                 addItemDialog.dismiss();
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        swipeRefresh.setRefreshing(true);
+                                    }
+                                });
+                                getDataFromFirim();
                             }
                         }
                         closeProgressDialog();
