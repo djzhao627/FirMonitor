@@ -344,7 +344,6 @@ public class MainActivity extends BaseActivity
                         closeProgressDialog();
                     }
                 });
-
             }
         });
         addItemDialog.show();

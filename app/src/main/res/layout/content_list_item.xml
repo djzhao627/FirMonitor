@@ -111,6 +111,7 @@
                         android:gravity="left"
                         android:text="2019-02-15 08:42"
                         android:textColor="#555" />
+
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
