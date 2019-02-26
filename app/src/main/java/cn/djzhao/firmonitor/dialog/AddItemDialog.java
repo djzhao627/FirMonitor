@@ -3,9 +3,12 @@ package cn.djzhao.firmonitor.dialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import cn.djzhao.firmonitor.R;
 
@@ -14,6 +17,10 @@ public class AddItemDialog extends Dialog {
     private Button cancelBtn;
     private Button addBtn;
     private EditText inputTxt;
+
+    public EditText getInputTxt() {
+        return inputTxt;
+    }
 
     private onCancelClickedListener cancelListener;
     private onAddClickedListener addListener;
@@ -52,6 +59,18 @@ public class AddItemDialog extends Dialog {
                 if (addListener != null) {
                     addListener.onClick(inputTxt.getText().toString().trim());
                 }
+            }
+        });
+
+        inputTxt.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE
+                        || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    addBtn.performClick();
+                    return true;
+                }
+                return false;
             }
         });
     }

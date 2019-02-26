@@ -71,6 +71,8 @@
                         android:background="@null"
                         android:gravity="center"
                         android:hint="地址"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
                         android:maxLines="1"
                         android:textSize="20sp" />
                 </LinearLayout>

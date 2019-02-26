@@ -23,6 +23,7 @@ import android.widget.TextView;
 import org.litepal.crud.DataSupport;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -76,9 +77,18 @@ public class MainActivity extends BaseActivity
     }
 
     private void getDataFromFirim() {
-        final List<AppListItem> appListItems = DataSupport.findAll(AppListItem.class);
+        final List<AppListItem> appListItems = DataSupport.order("updateTime desc").find(AppListItem.class);
         String baseUrl = "https://download.fir.im/";
         int i = 0;
+        if (appListItems == null || appListItems.size() == 0) {
+            swipeRefresh.setRefreshing(false);
+            emptyTxt.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+            return;
+        } else {
+            emptyTxt.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
         for (final AppListItem item : appListItems) {
             if (++i == appListItems.size()) {
                 isFinished = true;
@@ -103,12 +113,15 @@ public class MainActivity extends BaseActivity
                     if (!newDate.equals(item.getUpdateTime())) {
                         item.setUpdateTime(newDate);
                         item.setNew(true);
+                        item.save();
                     }
                     if (isFinished) {
                         final AppListAdapter adapter = new AppListAdapter(appListItems, new AppListAdapter.OnAppListItemClickListener() {
                             @Override
                             public void onItemClick(View view, int positon) {
                                 AppListItem item1 = appListItems.get(positon);
+                                item1.setNew(false);
+                                item1.save();
                                 Uri uri = Uri.parse("https://fir.im/" + item1.getShort_url());
                                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                                 startActivity(intent);
@@ -250,7 +263,7 @@ public class MainActivity extends BaseActivity
         int index = target.indexOf("\"" + key + "\"");
         int start = index + key.length() + 4;
         int end = target.indexOf("\"", start);
-        if ("created_at".equals(key)) {
+        if ("created_at".equals(key) || "fsize".equals(key)) {
             start = start - 1;
             end = target.indexOf(",", start);
         }
@@ -273,10 +286,14 @@ public class MainActivity extends BaseActivity
         }
 
         AppListItem item = new AppListItem();
+        item.setNew(true);
         item.setShort_url(short_url);
         item.setAppIconUrl(getValue("icon_url", value));
         item.setAppName(getValue("name", value));
-        item.setAppVersion(getValue("version", value));
+        Long fsize = Long.valueOf(getValue("fsize", value));
+        DecimalFormat df = new DecimalFormat("#.00");
+        Double f = fsize / 1024.0 / 1024.0;
+        item.setAppVersion(getValue("version", value) + " - " + df.format(f) + "MB");
         item.setPlatform(getValue("type", value));
         Long time = Long.valueOf(getValue("created_at", value) + "000");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm"); // 2019-02-20 23:34
@@ -297,6 +314,7 @@ public class MainActivity extends BaseActivity
             @Override
             public void onClick(String title) {
                 String url = "https://download.fir.im/";
+                hideOrShowSoftInput(false, addItemDialog.getInputTxt());
                 showProgressDialog("添加中，请等待...");
                 HttpUtil.sendOkHttpRequest(url + title, new Callback() {
                     @Override
